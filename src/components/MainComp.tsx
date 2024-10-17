@@ -5,54 +5,44 @@ import { useVexFlow } from '../hooks/useVexFlow';
 import Box from '@mui/material/Box';
 import { useBluetooth } from '../hooks/useBluetooth';
 import { useEffect, useState } from 'react';
+import { changeColor } from '../utils/helper';
+import { StaveNote } from 'vexflow/core';
 
 const MainComp: React.FC = () => {
   const { btCharacteristic, pressedKey, connectToBluetoothDevice } = useBluetooth();
   const { vexOutputDivRef, tickables, clearStaveNotes } = useVexFlow();
   const [currentIndex, setCurrentIndex] = useState(0); // Track the current note index
 
-  //todo: change the color of the beams
+  //todo: make the animation focus on the current note
+  //todo: make the buttons disabled when bluetooth is not connected
+  //todo: create usecontext for bluetooth
+
+  useEffect(() => {
+    const currentNote = tickables[currentIndex];
+    tickables.forEach((tickable) => {
+      tickable.getSVGElement()?.classList.remove('pump-animation');
+    })
+    currentNote?.getSVGElement()?.classList.add('pump-animation');
+  }, [tickables.length, currentIndex])
 
   useEffect(() => {
     // Check if there are notes in tickables and pressedKeys is not empty
     if (tickables.length === 0 || pressedKey === null) return;
-    const expectedNoteName = tickables[currentIndex].keys[0];
 
+    const expectedNoteName = tickables[currentIndex].keys[0];
     const [combinedNoteName, octaveNo] = pressedKey.noteName.split('/');
     const pressedNoteNames = combinedNoteName
       .split('-')
       .map((noteName) => `${noteName}/${octaveNo}`);
 
-    console.log('pressedNoteNames', pressedNoteNames);
-    console.log('expectedNoteName', expectedNoteName);
+    console.log('pressedNoteNames', pressedNoteNames);//
+    console.log('expectedNoteName', expectedNoteName);//
 
     const isCorrectMatch = pressedNoteNames.includes(expectedNoteName);
 
-    const changeToGreen = () => {
-      (tickables[currentIndex].getSVGElement() as SVGElement)
-        .querySelectorAll('*')
-        .forEach((childNode) => {
-          Object.assign(
-            (childNode as HTMLElement).style,
-            { fill: 'green', stroke: 'green' }
-          );
-        });
-    };
-
-    const changeToRed = () => {
-      (tickables[currentIndex].getSVGElement() as SVGElement)
-        .querySelectorAll('*')
-        .forEach((childNode) => {
-          Object.assign(
-            (childNode as HTMLElement).style,
-            { fill: 'red', stroke: 'red' }
-          );
-        });
-    };
-
     // Compare the pressed key with the current note
     if (isCorrectMatch) {
-      changeToGreen();
+      changeColor(tickables, currentIndex, "#489d48");
       setCurrentIndex((prevIndex) => prevIndex + 1); // Move to the next note
 
       if (currentIndex + 1 >= tickables.length) {
@@ -61,7 +51,7 @@ const MainComp: React.FC = () => {
         setCurrentIndex(0);
       }
     } else {
-      changeToRed();
+      changeColor(tickables, currentIndex, "#ff4a4a");
     }
   }, [pressedKey]);
 
@@ -95,9 +85,21 @@ const MainComp: React.FC = () => {
           display={"flex"}
           justifyContent={"space-evenly"}
         >
-          <TrebleButton />
-          <Button sx={{ flexGrow: 1 }} variant="contained">Both</Button>
-          <Button sx={{ flexGrow: 1 }} variant="contained">Bass</Button>
+          <TrebleButton disabled={!btCharacteristic} />
+
+          <Button
+            disabled={!btCharacteristic}
+            sx={{ flexGrow: 1 }} variant="contained"
+          >
+            Both
+          </Button>
+
+          <Button
+            disabled={!btCharacteristic}
+            sx={{ flexGrow: 1 }} variant="contained"
+          >
+            Bass
+          </Button>
         </Grid>
       </Grid>
     </Box>

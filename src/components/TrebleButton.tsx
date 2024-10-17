@@ -4,7 +4,12 @@ import { Beam, Formatter, Voice } from "vexflow/core";
 import { useGenRandomStaveNote } from "../hooks/useGenRandomStaveNote";
 import { useVexFlow } from "../hooks/useVexFlow";
 
-const TrebleButton: React.FC = () => {
+interface TrebleButtonProps {
+  disabled?: boolean;
+}
+
+const TrebleButton: React.FC<TrebleButtonProps> = (props) => {
+  const { disabled } = props;
   const { vexContext, topStave2, tickables, setBeams, setTickables, clearStaveNotes } = useVexFlow();
   const trebleRef = useRef<HTMLButtonElement | null>(null);
   const { generateRandomStaveNotesFor44 } = useGenRandomStaveNote();
@@ -28,7 +33,8 @@ const TrebleButton: React.FC = () => {
   };
 
   return (
-    <Button 
+    <Button
+      disabled={disabled}
       sx={{ flexGrow: 1 }} 
       ref={trebleRef} 
       onClick={tickables.length > 0 ? clearStaveNotes : drawStaveNotes} 
