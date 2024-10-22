@@ -40,7 +40,9 @@ const TrebleButton: React.FC<TrebleButtonProps> = (props) => {
       onClick={tickables.length > 0 ? clearStaveNotes : drawStaveNotes} 
       variant="contained"
       color={tickables.length > 0 ? "error" : "primary"}
-    >{tickables.length > 0 ? "Clear" : "Treble"}</Button>
+    >
+      {tickables.length > 0 ? "Clear" : "Treble"}
+    </Button>
   );
 };
 

@@ -11,10 +11,31 @@ const durations: { key: string; beats: number }[] = [
 ];
 
 const letters: string[] = ["C", "D", "E", "F", "G", "A", "B"];
-const accidentals: string[] = ["", "#", "b"];
+const accidentals: string[] = ["", "#", "##", "b", "bb"];
 const clefOctaves: { [key: string]: string[] } = {
   "treble": ["4", "5"],
   "bass": ["2", "3"]
+};
+
+const enharmonicEquivalentsWithOctaveShift: { [key: string]: { note: string; octaveShift: number } } = {
+  "Cbb": {note: "Bb", octaveShift: -1}, // double flat
+  "Dbb": {note: "C", octaveShift: 0},
+  "Ebb": {note: "D", octaveShift: 0},
+  "Fbb": {note: "E", octaveShift: 0},
+  "Gbb": {note: "F", octaveShift: 0},
+  "Abb": {note: "G", octaveShift: 0},
+  "Bbb": {note: "A", octaveShift: 0},
+  "C##": {note: "D", octaveShift: 0}, // double sharp
+  "D##": {note: "E", octaveShift: 0},
+  "E##": {note: "F#", octaveShift: 0},
+  "F##": {note: "G", octaveShift: 0},
+  "G##": {note: "A", octaveShift: 0},
+  "A##": {note: "B", octaveShift: 0},
+  "B##": {note: "C#", octaveShift: 1},
+  "E#": {note: "F", octaveShift: 0}, // sharp & flat on white keys
+  "Fb": {note: "E", octaveShift: 0},
+  "B#": {note: "C", octaveShift: 1},
+  "Cb": {note: "B", octaveShift: -1},
 };
 
 // Utility function to get a random item from an array
@@ -55,6 +76,7 @@ export const useGenRandomStaveNote = () => {
   }, []);
 
   return {
-    generateRandomStaveNotesFor44
+    generateRandomStaveNotesFor44,
+    enharmonicEquivalentsWithOctaveShift
   };
 };
