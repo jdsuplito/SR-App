@@ -84,30 +84,31 @@ const MainComp: React.FC = () => {
   };
 
   const compareNotes = () => {
+    if (!pressedKey || !currentNote) return;
     const vexFlowNoteKey = currentNote.keys[0];
     const [vexFlowNoteName, vexFlowOctave] = vexFlowNoteKey.split('/');
 
     // Extract and format pressed note keys
-    if (!pressedKey) return;
     const [combinedNoteName, pressedOctave] = pressedKey.noteName.split('/');
     const pressedNoteKeys = combinedNoteName.split('-').map((noteName) => `${noteName}/${pressedOctave}`);
 
      // Check for enharmonic equivalents with octave adjustments
     const equivalentNote = enharmonicEquivalentsWithOctaveShift[vexFlowNoteName];
-    let expectedNote = vexFlowNoteName;
+    let expectedNoteName = vexFlowNoteName;
     let expectedOctave = parseInt(vexFlowOctave, 10);
-    const expectedNoteKey = `${enharmonicEquivalentsWithOctaveShift[expectedNote].note}/${expectedOctave}`;
 
     // If there's an enharmonic equivalent, adjust the note and octave accordingly
     if (equivalentNote) {
-      expectedNote = equivalentNote.note;
+      expectedNoteName = equivalentNote.note;
       expectedOctave += equivalentNote.octaveShift;
     }
+
+    const expectedNoteKey = equivalentNote ? `${expectedNoteName}/${expectedOctave}` : vexFlowNoteKey;
 
     // Find the pressed note that matches the VexFlow note or its enharmonic equivalent
     const pressedNoteMatch = pressedNoteKeys.find((noteKey) => {
       const [noteName, noteOctave] = noteKey.split('/');
-      const isNoteNameMatch = expectedNote === noteName || enharmonicEquivalentsWithOctaveShift[expectedNote].note === noteName;
+      const isNoteNameMatch = expectedNoteName === noteName;
 
       // Ensure both note name and octave match
       return isNoteNameMatch && expectedOctave === parseInt(noteOctave, 10);
@@ -120,10 +121,36 @@ const MainComp: React.FC = () => {
     console.log('enharmonicEquivalents', equivalentNote);//
 
     // Check if the matching pressed note is the same as the current VexFlow note (including octave)
-    const isCorrectMatch = ( pressedNoteMatch === vexFlowNoteKey || pressedNoteMatch === expectedNoteKey);
+    const isCorrectMatch = pressedNoteMatch === expectedNoteKey;
     return isCorrectMatch;
   };
 
+  const removeClassList = () => {
+    if (!tickables) return;
+    tickables.forEach((tickable) => {
+      tickable.getSVGElement()?.classList.remove('pump-animation');
+      tickable.stem?.getSVGElement()?.classList.remove('pump-animation');
+      tickable.getBeam()?.getSVGElement()?.classList.remove('pump-animation');
+    })
+  }
+
+  const addClassList = () => {
+    if (!currentNote) return;
+    if (currentNote.hasBeam()) {
+      (currentNote.getBeam() as Beam).notes.forEach((note) => {
+        const currentNoteKey = currentNote.keys[0];
+        const noteKey = note.keys[0];
+        if (noteKey === currentNoteKey) {
+          const beam = note.getBeam();
+          note.getSVGElement()?.classList.add('pump-animation');
+          note.stem?.getSVGElement()?.classList.add('pump-animation');
+          beam?.getSVGElement()?.classList.add('pump-animation');
+        }
+      })
+    } else {
+      currentNote?.getSVGElement()?.classList.add('pump-animation');
+    }
+  }
 
   const handleTrebleBtn = () => {
     drawStaveNotes("treble");
@@ -131,10 +158,9 @@ const MainComp: React.FC = () => {
 
   // useEffects
   useEffect(() => {
-    tickables.forEach((tickable) => {
-      tickable.getSVGElement()?.classList.remove('pump-animation');
-    })
-    currentNote?.getSVGElement()?.classList.add('pump-animation');
+    if (tickables.length === 0 || currentNote === null) return;
+    removeClassList();
+    addClassList();
   }, [tickables.length, currentNoteIndex])
 
   useEffect(() => {
