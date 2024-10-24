@@ -6,9 +6,13 @@ interface MainPageProps {
   btCharacteristic: BluetoothRemoteGATTCharacteristic | null;
   vexOutputDivRef: React.RefObject<HTMLDivElement> | null;
   trebleRef: React.RefObject<HTMLButtonElement> | null;
+  bothRef: React.RefObject<HTMLButtonElement> | null;
+  bassRef: React.RefObject<HTMLButtonElement> | null;
   tickables: StaveNote[];
   connectToBluetoothDevice: () => void;
   handleTrebleBtn: () => void;
+  handleBothBtn: () => void;
+  handleBassBtn: () => void;
   clearStaveNotes: () => void;
 }
 
@@ -17,10 +21,12 @@ const MainPage: React.FC<MainPageProps> = (props) => {
     btCharacteristic,
     vexOutputDivRef,
     trebleRef,
-    tickables,
+    bothRef,
+    bassRef,
     connectToBluetoothDevice,
     handleTrebleBtn,
-    clearStaveNotes
+    handleBothBtn,
+    handleBassBtn,
   } = props;
 
   return (
@@ -51,23 +57,28 @@ const MainPage: React.FC<MainPageProps> = (props) => {
           disabled={!btCharacteristic}
           sx={{ flexGrow: 1 }} 
           ref={trebleRef} 
-          onClick={tickables.length > 0 ? clearStaveNotes : handleTrebleBtn} 
+          onClick={handleTrebleBtn} 
           variant="contained"
-          color={tickables.length > 0 ? "error" : "primary"}
         >
-          {tickables.length > 0 ? "Clear" : "Treble"}
+          Treble
         </Button>
 
         <Button
           disabled={!btCharacteristic}
-          sx={{ flexGrow: 1 }} variant="contained"
+          sx={{ flexGrow: 1 }} 
+          variant="contained"
+          ref={bothRef}
+          onClick={handleBothBtn} 
         >
           Both
         </Button>
 
         <Button
           disabled={!btCharacteristic}
-          sx={{ flexGrow: 1 }} variant="contained"
+          sx={{ flexGrow: 1 }} 
+          variant="contained"
+          ref={bassRef}
+          onClick={handleBassBtn} 
         >
           Bass
         </Button>

@@ -3,44 +3,42 @@ import { useVexFlow } from '../hooks/useVexFlow';
 import Box from '@mui/material/Box';
 import { useBluetooth } from '../hooks/useBluetooth';
 import { useEffect, useRef, useState } from 'react';
-import MainPage from './MainPage';
-import { Beam, Formatter, Voice } from 'vexflow/core';
+import MainPage from '../pages/MainPage';
+import { Beam, Formatter, Stave, Voice } from 'vexflow/core';
 import { useGenRandomStaveNote } from '../hooks/useGenRandomStaveNote';
+import CompletionModal from './modals/CompletionModal';
 
 const MainComp: React.FC = () => {
   // hooks
   const { btCharacteristic, pressedKey, connectToBluetoothDevice } = useBluetooth();
-  const { vexOutputDivRef, vexContext, topStave2, tickables, setTickables } = useVexFlow();
+  const { vexOutputDivRef, vexContext, topStave2, botStave2, tickables, setTickables } = useVexFlow();
   const { generateRandomStaveNotesFor44, enharmonicEquivalentsWithOctaveShift } = useGenRandomStaveNote();
 
   // State
   const [currentNoteIndex, setCurrentNoteIndex] = useState<number>(0);
+  const [openCompletionModal, setOpenCompletionModal] = useState(false);
 
   // refs
   const trebleRef = useRef<HTMLButtonElement | null>(null);
+  const bothRef = useRef<HTMLButtonElement | null>(null);
+  const bassRef = useRef<HTMLButtonElement | null>(null);
 
   // constants
   const currentNote = tickables[currentNoteIndex];
   
 
   // functions
-  const drawStaveNotes = (clef: string) => {
-    if (vexContext && topStave2) {
+  const drawStaveNotes = (clef: string, stave: Stave) => {
+    if (vexContext && stave) {
       const generatedNotes = generateRandomStaveNotesFor44(clef);
       const beams = Beam.generateBeams(generatedNotes);
       const voice = new Voice({ num_beats: 4, beat_value: 4 }).addTickables(generatedNotes);
-      new Formatter().joinVoices([voice]).format([voice], topStave2.getWidth());
+      new Formatter().joinVoices([voice]).format([voice], stave.getWidth());
 
-      voice.draw(vexContext, topStave2);
+      voice.draw(vexContext, stave);
       beams.forEach((beam) => {
         beam.setContext(vexContext).draw();
       });
-
-      //
-      generatedNotes.forEach((note) => {
-        console.log(note.keys);//
-      })
-      //
 
       setTickables(generatedNotes);
     }
@@ -120,7 +118,6 @@ const MainComp: React.FC = () => {
     console.log('vexFlowNoteKey', vexFlowNoteKey);//
     console.log('enharmonicEquivalents', equivalentNote);//
 
-    // Check if the matching pressed note is the same as the current VexFlow note (including octave)
     const isCorrectMatch = pressedNoteMatch === expectedNoteKey;
     return isCorrectMatch;
   };
@@ -152,9 +149,26 @@ const MainComp: React.FC = () => {
     }
   }
 
+  // handlers
   const handleTrebleBtn = () => {
-    drawStaveNotes("treble");
+    if (!topStave2) return;
+    if (tickables.length > 0) clearStaveNotes();
+    drawStaveNotes("treble", topStave2);
   }
+  const handleBothBtn = () => {
+    if (!topStave2 || !botStave2) return;
+    if (tickables.length > 0) { //todo: clearstavenotes on both staves
+      clearStaveNotes();
+      drawStaveNotes("treble", topStave2);
+      drawStaveNotes("bass", botStave2);
+    }
+  }
+  const handleBassBtn = () => {
+    if (!topStave2 || !botStave2) return;
+    if (tickables.length > 0) clearStaveNotes();
+    drawStaveNotes("bass", botStave2);
+  }
+  const handleCloseCompletionModal = () => setOpenCompletionModal(false);
 
   // useEffects
   useEffect(() => {
@@ -164,7 +178,6 @@ const MainComp: React.FC = () => {
   }, [tickables.length, currentNoteIndex])
 
   useEffect(() => {
-    // Check if there are notes in tickables and pressedKeys is not empty
     if (tickables.length === 0 || pressedKey === null) return;
 
     const isCorrectMatch = compareNotes();
@@ -176,6 +189,7 @@ const MainComp: React.FC = () => {
 
       if (currentNoteIndex + 1 >= tickables.length) {
         // If all notes have been checked, clear the stave and reset everything
+        setOpenCompletionModal(true);
         clearStaveNotes();
         setCurrentNoteIndex(0);
       }
@@ -189,10 +203,14 @@ const MainComp: React.FC = () => {
     btCharacteristic,
     vexOutputDivRef,
     trebleRef,
+    bothRef,
+    bassRef,
     tickables,
     connectToBluetoothDevice,
     clearStaveNotes,
-    handleTrebleBtn
+    handleTrebleBtn,
+    handleBothBtn,
+    handleBassBtn
   };
 
 
@@ -208,6 +226,10 @@ const MainComp: React.FC = () => {
         padding={1}
       >
         <MainPage { ...mainPageProps }/>
+        <CompletionModal
+          openCompletionModal={openCompletionModal}
+          handleCloseCompletionModal={handleCloseCompletionModal}
+        />
       </Grid>
     </Box>
   );

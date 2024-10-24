@@ -43,7 +43,7 @@ export const VexFlowProvider: React.FC<{ children: React.ReactNode }> = ({ child
       .setBegBarType(Barline.type.NONE)
       .setEndBarType(Barline.type.NONE)
       .addClef("treble")
-      .addTimeSignature("4/4")
+      .addTimeSignature("4/4") //common signature
       .setContext(vexContext)
       .draw();
 
